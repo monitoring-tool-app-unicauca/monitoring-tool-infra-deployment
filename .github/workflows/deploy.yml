@@ -28,7 +28,7 @@ jobs:
 
       - name: Pull updated images
         run: |
-          docker-compose pull
+          docker compose pull
 
       - name: Deploy stack
         run: |
