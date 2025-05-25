@@ -3,6 +3,9 @@ name: Deploy Infra Stack on Dispatch Event
 on:
   repository_dispatch:
     types: [deploy-from-ms]
+  push:
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -35,4 +38,4 @@ jobs:
           docker-compose up -d --remove-orphans
 
       - name: Notify deploy success
-        run: echo "Infra stack updated with new image for service ${{ github.event.client_payload.service }}"
+        run: echo "Infra stack updated with new image for service ${{ github.event.client_payload.service || github.ref_name }}"
