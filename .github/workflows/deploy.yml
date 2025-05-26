@@ -35,4 +35,4 @@ jobs:
 
       - name: Deploy stack on EC2
         run: |
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@52.91.99.145 "cd ~/infra && docker compose pull && docker compose up -d --remove-orphans"
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@52.91.99.145 "cd ~/infra && docker-compose pull && docker-compose up -d --remove-orphans"
