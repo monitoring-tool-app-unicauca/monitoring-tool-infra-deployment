@@ -27,12 +27,11 @@ jobs:
 
       - name: Create infra folder on EC2
         run: |
-          ssh -o StrictHostKeyChecking=no ec2-user@52.91.99.145 "mkdir -p ~/infra"
-
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ec2-user@52.91.99.145 "mkdir -p ~/infra"
       - name: Copy docker-compose.yml to EC2
         run: |
-          scp -o StrictHostKeyChecking=no docker-compose.yml ec2-user@52.91.99.145:~/infra/docker-compose.yml
+          scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no docker-compose.yml ec2-user@52.91.99.145:~/infra/docker-compose.yml
 
       - name: Deploy stack on EC2
         run: |
-          ssh -o StrictHostKeyChecking=no ec2-user@52.91.99.145 "cd ~/infra && docker compose pull && docker compose up -d --remove-orphans"
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ec2-user@52.91.99.145 "cd ~/infra && docker compose pull && docker compose up -d --remove-orphans"
