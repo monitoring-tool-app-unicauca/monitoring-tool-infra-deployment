@@ -1,6 +1,41 @@
 version: '3.8'
 
 services:
+
+  # Microservicio Users
+  users-ms:
+    image: ghcr.io/monitoring-tool-app-unicauca/monitoring-tool-backend-users-ms:latest
+    ports:
+      - "8090:8090"
+    environment:
+      TZ: America/Bogota
+      SPRING_PROFILES_ACTIVE: "docker"
+      USERS_PORT: 8090
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: monitoring_db
+      DB_USER: monitoring-user
+      DB_PASSWORD: monitoring
+      DB_SCHEMA: public
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: guest
+      RABBITMQ_PASSWORD: guest
+      DEBUG_LEVEL: INFO
+      JWT_EXPIRATION: 3600000
+      JWT_SECRET: 6IBwdiQm6JUC7nCL8PEm9Y8O7D41XYoMlnPD4a3cXTd5AHEgQjdRZAsiao5ysm9hquHjvIuigm4ACGzwTEFC0A==
+      NOTIFICATION_URL: http://notification-ms:8091
+      NOTIFICATION_EXPIRES: 10
+      ADMIN_EMAIL: julianndrb@gmail.com
+      ADMIN_NAME: Paula Peña
+      ADMIN_LASTNAME: App
+      ADMIN_DOCUMENT: 1061226854
+      ADMIN_PHONE: 3000000000
+    depends_on:
+      - rabbitmq
+      - db
+    networks:
+      - monitoring-tool-network
   tracking-ms:
     image: ghcr.io/monitoring-tool-app-unicauca/monitoring-tool-backend-tracking-ms:latest
     ports:
@@ -25,6 +60,30 @@ services:
     depends_on:
       - rabbitmq
       - db
+    networks:
+      - monitoring-tool-network
+
+  # Microservicio Notification
+  notification-ms:
+    image: ghcr.io/monitoring-tool-app-unicauca/monitoring-tool-backend-notification-ms:latest
+    ports:
+      - "8091:8091"
+    environment:
+      TZ: America/Bogota
+      SPRING_PROFILES_ACTIVE: "docker"
+      NOTIFICATION_PORT: 8091
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: guest
+      RABBITMQ_PASSWORD: guest
+      MAIL_HOST: smtp.gmail.com
+      MAIL_PORT: 587
+      MAIL_USERNAME: soporteactivate2022@gmail.com
+      MAIL_PASSWORD: eyhrfqrreyetmjah
+      DEBUG_LEVEL: INFO
+    depends_on:
+      - users-ms
+      - rabbitmq
     networks:
       - monitoring-tool-network
 
