@@ -34,5 +34,12 @@ jobs:
           scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no docker-compose.yml ubuntu@52.91.99.145:~/infra/docker-compose.yml
 
       - name: Deploy stack on EC2
+        env:
+          GHCR_USERNAME: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
         run: |
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@52.91.99.145 "cd ~/infra && docker-compose pull && docker-compose up -d --remove-orphans"
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@52.91.99.145 "
+            echo $GHCR_TOKEN | docker login ghcr.io -u $GHCR_USERNAME --password-stdin && \
+            cd ~/infra && \
+            docker-compose pull && \
+            docker-compose up -d --remove-orphans"
