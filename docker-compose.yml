@@ -1,7 +1,14 @@
 version: '3.8'
 
 services:
-
+  frontend:
+    image: ghcr.io/monitoring-tool-app-unicauca/monitoring-tool-frontend-ms:latest
+    container_name: monitoring-tool-frontend
+    ports:
+      - "4200:80"
+    restart: unless-stopped
+    networks:
+      - infra_monitoring-tool-network
   # Microservicio Users
   users-ms:
     image: ghcr.io/monitoring-tool-app-unicauca/monitoring-tool-backend-users-ms:latest
@@ -24,7 +31,7 @@ services:
       DEBUG_LEVEL: INFO
       JWT_EXPIRATION: 3600000
       JWT_SECRET: 6IBwdiQm6JUC7nCL8PEm9Y8O7D41XYoMlnPD4a3cXTd5AHEgQjdRZAsiao5ysm9hquHjvIuigm4ACGzwTEFC0A==
-      NOTIFICATION_URL: http://notification-ms:8091
+      NOTIFICATION_URL: http://localhost:4200/auth/recovery-password
       NOTIFICATION_EXPIRES: 10
       ADMIN_EMAIL: julianndrb@gmail.com
       ADMIN_NAME: Paula Peña
