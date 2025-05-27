@@ -8,8 +8,7 @@ services:
       - "4200:80"
     restart: unless-stopped
     networks:
-      - infra_monitoring-tool-network
-  # Microservicio Users
+      - monitoring-tool-network
   users-ms:
     image: ghcr.io/monitoring-tool-app-unicauca/monitoring-tool-backend-users-ms:latest
     ports:
