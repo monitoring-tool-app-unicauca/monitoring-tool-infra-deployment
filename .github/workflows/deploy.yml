@@ -27,18 +27,18 @@ jobs:
 
       - name: Create infra folder on EC2
         run: |
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@18.212.179.114 "mkdir -p ~/infra"
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@52.70.30.124 "mkdir -p ~/infra"
 
       - name: Copy docker-compose.yml to EC2
         run: |
-          scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no docker-compose.yml ubuntu@18.212.179.114:~/infra/docker-compose.yml
+          scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no docker-compose.yml ubuntu@52.70.30.124:~/infra/docker-compose.yml
 
       - name: Deploy stack on EC2
         env:
           GHCR_USERNAME: ${{ github.actor }}
           GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
         run: |
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@18.212.179.114 "
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@52.70.30.124 "
             echo $GHCR_TOKEN | docker login ghcr.io -u $GHCR_USERNAME --password-stdin && \
             cd ~/infra && \
             docker-compose pull && \
