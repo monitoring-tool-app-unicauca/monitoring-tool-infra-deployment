@@ -30,7 +30,7 @@ services:
       DEBUG_LEVEL: INFO
       JWT_EXPIRATION: 3600000
       JWT_SECRET: 6IBwdiQm6JUC7nCL8PEm9Y8O7D41XYoMlnPD4a3cXTd5AHEgQjdRZAsiao5ysm9hquHjvIuigm4ACGzwTEFC0A==
-      NOTIFICATION_URL: http://ec2-3-95-165-52.compute-1.amazonaws.com:4200/auth/recovery-password
+      NOTIFICATION_URL: http://ec2-3-82-252-2.compute-1.amazonaws.com:4200/auth/recovery-password
       NOTIFICATION_EXPIRES: 10
       ADMIN_EMAIL: julianndrb@gmail.com
       ADMIN_NAME: Paula Peña
