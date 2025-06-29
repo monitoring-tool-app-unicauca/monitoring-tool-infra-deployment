@@ -85,8 +85,9 @@ services:
       RABBITMQ_PASSWORD: guest
       MAIL_HOST: smtp.gmail.com
       MAIL_PORT: 587
-      MAIL_USERNAME: soporteactivate2022@gmail.com
-      MAIL_PASSWORD: eyhrfqrreyetmjah
+      MAIL_USERNAME: julianndrb@gmail.com
+      MAIL_PASSWORD: dxbcczoihmcgadny
+
       DEBUG_LEVEL: INFO
     depends_on:
       - users-ms
