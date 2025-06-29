@@ -68,8 +68,6 @@ services:
       - db
     networks:
       - monitoring-tool-network
-
-
   # Microservicio Notification
   notification-ms:
     image: ghcr.io/monitoring-tool-app-unicauca/monitoring-tool-backend-notification-ms:latest
