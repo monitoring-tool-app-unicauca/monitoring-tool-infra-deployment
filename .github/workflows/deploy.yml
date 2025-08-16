@@ -3,9 +3,6 @@ name: Deploy Infra Stack on Dispatch Event
 on:
   repository_dispatch:
     types: [deploy-from-ms]
-  push:
-    branches:
-      - main
 
 permissions:
   contents: read
