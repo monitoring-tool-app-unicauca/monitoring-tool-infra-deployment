@@ -27,19 +27,67 @@ jobs:
 
       - name: Create infra folder on EC2
         run: |
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@52.91.249.87 "mkdir -p ~/infra"
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@13.218.48.57 "mkdir -p ~/infra"
 
       - name: Copy docker-compose.yml to EC2
         run: |
-          scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no docker-compose.yml ubuntu@52.91.249.87:~/infra/docker-compose.yml
+          scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no docker-compose.yml ubuntu@13.218.48.57:~/infra/docker-compose.yml
 
       - name: Deploy stack on EC2
         env:
           GHCR_USERNAME: ${{ github.actor }}
           GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
         run: |
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@52.91.249.87 "
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@13.218.48.57 "
             echo $GHCR_TOKEN | docker login ghcr.io -u $GHCR_USERNAME --password-stdin && \
             cd ~/infra && \
             docker-compose pull && \
             docker-compose up -d --remove-orphans"
+
+      - name: Install k6
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gnupg software-properties-common
+          curl -s https://dl.k6.io/key.gpg | sudo apt-key add -
+          echo "deb https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install -y k6
+
+      - name: Wait until service is up
+        if: ${{ github.event.client_payload.service == 'monitoring-tool-backend-users-ms' || github.event.client_payload.service == 'monitoring-tool-backend-tracking-ms' }}
+        run: |
+          SERVICE=${{ github.event.client_payload.service }}
+          echo "Checking health for $SERVICE ..."
+          
+          case $SERVICE in
+            monitoring-tool-backend-users-ms)
+              PORT=8090
+              CONTEXT_PATH="/monitoring-tool-users-ms"
+              ;;
+            monitoring-tool-backend-tracking-ms)
+              PORT=8092
+              CONTEXT_PATH="/monitoring-tool-tracking-ms"
+              ;;
+          esac
+          
+          for i in {1..30}; do
+            if curl -s http://13.218.48.57:${PORT}${CONTEXT_PATH}/actuator/health | grep '"status":"UP"' > /dev/null; then
+              echo "✅ $SERVICE is UP on port $PORT with context path ${CONTEXT_PATH}!"
+              break
+            fi
+            echo "Waiting for $SERVICE on port $PORT${CONTEXT_PATH}..."
+            sleep 10
+          done
+
+      - name: Run k6 smoke test
+        if: ${{ github.event.client_payload.service == 'monitoring-tool-backend-users-ms' || github.event.client_payload.service == 'monitoring-tool-backend-tracking-ms' }}
+        run: |
+          SERVICE=${{ github.event.client_payload.service }}
+          echo "Running performance test for $SERVICE ..."
+          if [ -f "infra-tests/${SERVICE}.js" ]; then
+            k6 run infra-tests/${SERVICE}.js
+          else
+            echo "⚠️ No test found for $SERVICE, skipping..."
+          fi
+
+
