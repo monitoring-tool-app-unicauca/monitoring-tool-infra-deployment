@@ -33,6 +33,13 @@ jobs:
         run: |
           scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no docker-compose.yml ubuntu@13.218.48.57:~/infra/docker-compose.yml
 
+      - name: 🧹 Clean unused Docker resources on EC2
+        run: |
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@13.218.48.57 "
+            echo 'Cleaning unused Docker images, containers, networks and volumes...' && \
+            docker system prune -af --volumes || true
+          "
+
       - name: Deploy stack on EC2
         env:
           GHCR_USERNAME: ${{ github.actor }}
@@ -42,7 +49,8 @@ jobs:
             echo $GHCR_TOKEN | docker login ghcr.io -u $GHCR_USERNAME --password-stdin && \
             cd ~/infra && \
             docker-compose pull && \
-            docker-compose up -d --remove-orphans"
+            docker-compose up -d --remove-orphans
+          "
 
       - name: Install k6
         run: |
@@ -89,5 +97,3 @@ jobs:
           else
             echo "⚠️ No test found for $SERVICE, skipping..."
           fi
-
-
