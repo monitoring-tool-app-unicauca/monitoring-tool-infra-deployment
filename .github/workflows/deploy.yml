@@ -12,6 +12,9 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    env:
+      EC2_HOST: ${{ secrets.EC2_HOST }}
+
     steps:
       - name: Checkout Infra repo
         uses: actions/checkout@v4
@@ -24,15 +27,15 @@ jobs:
 
       - name: Create infra folder on EC2
         run: |
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@13.218.48.57 "mkdir -p ~/infra"
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@${EC2_HOST} "mkdir -p ~/infra"
 
       - name: Copy docker-compose.yml to EC2
         run: |
-          scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no docker-compose.yml ubuntu@13.218.48.57:~/infra/docker-compose.yml
+          scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no docker-compose.yml ubuntu@${EC2_HOST}:~/infra/docker-compose.yml
 
       - name: 🧹 Clean unused Docker resources on EC2
         run: |
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@13.218.48.57 "
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@${EC2_HOST} "
             echo 'Cleaning unused Docker images, containers, networks and volumes...' && \
             docker system prune -af --volumes || true
           "
@@ -42,7 +45,7 @@ jobs:
           GHCR_USERNAME: ${{ github.actor }}
           GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
         run: |
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@13.218.48.57 "
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@${EC2_HOST} "
             echo $GHCR_TOKEN | docker login ghcr.io -u $GHCR_USERNAME --password-stdin && \
             cd ~/infra && \
             docker-compose pull && \
@@ -76,7 +79,7 @@ jobs:
           esac
           
           for i in {1..30}; do
-            if curl -s http://13.218.48.57:${PORT}${CONTEXT_PATH}/actuator/health | grep '"status":"UP"' > /dev/null; then
+            if curl -s http://${EC2_HOST}:${PORT}${CONTEXT_PATH}/actuator/health | grep '"status":"UP"' > /dev/null; then
               echo "✅ $SERVICE is UP on port $PORT with context path ${CONTEXT_PATH}!"
               break
             fi
@@ -84,13 +87,19 @@ jobs:
             sleep 10
           done
 
-      - name: Run k6 smoke test
+      - name: Run Performance Test
         if: ${{ github.event.client_payload.service == 'monitoring-tool-backend-users-ms' || github.event.client_payload.service == 'monitoring-tool-backend-tracking-ms' }}
+        env:
+          API_HOST: http://${{ secrets.EC2_HOST }}:${{ steps.resolve_port.outputs.PORT }}${{ steps.resolve_port.outputs.CONTEXT_PATH }}
+          API_USERNAME: ${{ secrets.API_USERNAME }}
+          API_PASSWORD: ${{ secrets.API_PASSWORD }}
         run: |
           SERVICE=${{ github.event.client_payload.service }}
           echo "Running performance test for $SERVICE ..."
+          
           if [ -f "infra-tests/${SERVICE}.js" ]; then
             k6 run infra-tests/${SERVICE}.js
           else
             echo "⚠️ No test found for $SERVICE, skipping..."
           fi
+
