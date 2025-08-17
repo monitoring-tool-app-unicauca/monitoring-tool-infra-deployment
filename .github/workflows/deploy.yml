@@ -90,7 +90,7 @@ jobs:
       - name: Run Performance Test
         if: ${{ github.event.client_payload.service == 'monitoring-tool-backend-users-ms' || github.event.client_payload.service == 'monitoring-tool-backend-tracking-ms' }}
         env:
-          EC2_HOST: ${{ secrets.EC2_HOST }}
+          API_HOST: ${{ secrets.EC2_HOST }}
           API_USERNAME: ${{ secrets.API_USERNAME }}
           API_PASSWORD: ${{ secrets.API_PASSWORD }}
         run: |
