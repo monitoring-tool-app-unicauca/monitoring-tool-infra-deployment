@@ -87,13 +87,19 @@ jobs:
             sleep 10
           done
 
-      - name: Run k6 performance test
-        if: ${{ github.event.client_payload.service == 'monitoring-tool-backend-users-ms' }}
+      - name: Run Performance Test
+        if: ${{ github.event.client_payload.service == 'monitoring-tool-backend-users-ms' || github.event.client_payload.service == 'monitoring-tool-backend-tracking-ms' }}
         env:
-          API_HOST: ${{ secrets.EC2_HOST }}
+          EC2_HOST: ${{ secrets.EC2_HOST }}
           API_USERNAME: ${{ secrets.API_USERNAME }}
           API_PASSWORD: ${{ secrets.API_PASSWORD }}
         run: |
-          echo "Running performance test for Users service..."
-          k6 run infra-tests/monitoring-tool-backend-users-ms.js
+          SERVICE=${{ github.event.client_payload.service }}
+          echo "Running performance test for $SERVICE ..."
+          
+          if [ -f "infra-tests/${SERVICE}.js" ]; then
+            k6 run infra-tests/${SERVICE}.js
+          else
+            echo "⚠️ No test found for $SERVICE, skipping..."
+          fi
 
