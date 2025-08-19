@@ -3,11 +3,9 @@ import { check, sleep, group } from "k6";
 import { Trend } from "k6/metrics";
 import { textSummary } from "https://jslib.k6.io/k6-summary/0.0.1/index.js";
 
-// 📊 Métricas personalizadas
 let authTrend = new Trend("auth_response_time", true);
 let usersTrend = new Trend("users_response_time", true);
 
-// ⚙️ Configuración de prueba
 export let options = {
     vus: 20,
     duration: "60s",
@@ -64,13 +62,13 @@ export default function (data) {
             "users body not empty": (r) => r.body && r.body.length > 10,
         });
 
-        sleep(1); // pacing
+        sleep(1);
     });
 }
 
 export function handleSummary(data) {
     return {
         stdout: textSummary(data, { indent: " ", enableColors: true }),
-        "results.json": JSON.stringify(data), // JSON crudo para dashboards
+        "results.json": JSON.stringify(data),
     };
 }
