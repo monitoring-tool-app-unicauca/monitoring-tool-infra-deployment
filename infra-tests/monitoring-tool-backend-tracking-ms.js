@@ -1,7 +1,6 @@
 import http from "k6/http";
 import { check, sleep } from "k6";
 
-const BASE_URL = "http://13.218.48.57:8092";
 const ENDPOINT = "/monitoring-tool-tracking-ms/actuator/health";
 
 export let options = {
@@ -14,7 +13,7 @@ export let options = {
 };
 
 export default function () {
-    let res = http.get(`${BASE_URL}${ENDPOINT}`);
+    let res = http.get(`${__ENV.API_HOST}${ENDPOINT}`);
     check(res, {
         "status is 200": (r) => r.status === 200,
         "body not empty": (r) => r.body && r.body.length > 10,

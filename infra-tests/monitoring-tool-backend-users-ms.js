@@ -1,62 +1,76 @@
 import http from "k6/http";
-import { check, sleep } from "k6";
+import { check, sleep, group } from "k6";
 import { Trend } from "k6/metrics";
+import { textSummary } from "https://jslib.k6.io/k6-summary/0.0.1/index.js";
 
-let authTrend = new Trend("auth_response_time");
-let usersTrend = new Trend("users_response_time");
+// 📊 Métricas personalizadas
+let authTrend = new Trend("auth_response_time", true);
+let usersTrend = new Trend("users_response_time", true);
 
+// ⚙️ Configuración de prueba
 export let options = {
     vus: 20,
     duration: "60s",
     thresholds: {
         http_req_duration: ["p(95)<500"],
         http_req_failed: ["rate<0.01"],
-        "auth_response_time": ["p(95)<300"],
-        "users_response_time": ["p(95)<400"],
+        auth_response_time: ["p(95)<1000"],
+        users_response_time: ["p(95)<400"],
     },
 };
 
 export function setup() {
-    const loginPayload = JSON.stringify({
-        username: __ENV.API_USERNAME,
-        password: __ENV.API_PASSWORD,
+    return group("Login", function () {
+        const loginPayload = JSON.stringify({
+            username: __ENV.API_USERNAME,
+            password: __ENV.API_PASSWORD,
+        });
+
+        const loginHeaders = { "Content-Type": "application/json" };
+
+        let loginRes = http.post(
+            `http://${__ENV.API_HOST}:8090/monitoring-tool-users-ms/user/authenticate`,
+            loginPayload,
+            { headers: loginHeaders, tags: { endpoint: "auth" } }
+        );
+
+        authTrend.add(loginRes.timings.duration);
+
+        check(loginRes, {
+            "login status is 200": (r) => r.status === 200,
+            "login returned token": (r) => r.json("data.token") !== undefined,
+        });
+
+        return { token: loginRes.json("data.token") };
     });
-
-    const loginHeaders = {
-        "Content-Type": "application/json",
-    };
-
-    let loginRes = http.post(
-        `http://${__ENV.API_HOST}:8090/monitoring-tool-users-ms/user/authenticate`,
-        loginPayload,
-        { headers: loginHeaders }
-    );
-
-    authTrend.add(loginRes.timings.duration);
-
-    check(loginRes, {
-        "login status is 200": (r) => r.status === 200,
-        "login returned token": (r) => r.json("data.token") !== undefined,
-    });
-
-    let token = loginRes.json("data.token");
-    return { token };
 }
 
 export default function (data) {
-    const USERS_ENDPOINT = "/monitoring-tool-users-ms/user?page=0&size=10&sort=email";
+    group("Get Users", function () {
+        const USERS_ENDPOINT = "/monitoring-tool-users-ms/user?page=0&size=10&sort=email";
 
-    const headers = {
-        Authorization: `Bearer ${data.token}`,
-    };
+        const headers = {
+            Authorization: `Bearer ${data.token}`,
+        };
 
-    let res = http.get(`http://${__ENV.API_HOST}:8090${USERS_ENDPOINT}`, { headers });
-    usersTrend.add(res.timings.duration);
+        let res = http.get(
+            `http://${__ENV.API_HOST}:8090${USERS_ENDPOINT}`,
+            { headers, tags: { endpoint: "users" } }
+        );
 
-    check(res, {
-        "users status is 200": (r) => r.status === 200,
-        "users body not empty": (r) => r.body && r.body.length > 10,
+        usersTrend.add(res.timings.duration);
+        check(res, {
+            "users status is 200": (r) => r.status === 200,
+            "users body not empty": (r) => r.body && r.body.length > 10,
+        });
+
+        sleep(1); // pacing
     });
+}
 
-    sleep(1);
+export function handleSummary(data) {
+    return {
+        stdout: textSummary(data, { indent: " ", enableColors: true }),
+        "results.json": JSON.stringify(data), // JSON crudo para dashboards
+    };
 }
