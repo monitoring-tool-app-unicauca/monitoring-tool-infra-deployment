@@ -2,13 +2,11 @@ import http from "k6/http";
 import { check, sleep } from "k6";
 import { Trend, Rate } from "k6/metrics";
 
-// 📊 Métricas personalizadas
 let authTrend = new Trend("tracking_auth_response_time");
 let healthTrend = new Trend("tracking_health_response_time");
 let projectsTrend = new Trend("tracking_projects_response_time");
 let errorRate = new Rate("tracking_errors");
 
-// ⚙️ Configuración del test
 export let options = {
     vus: 20,
     duration: "60s",
@@ -22,7 +20,6 @@ export let options = {
     },
 };
 
-// 🔑 Setup: autenticación para obtener el token
 export function setup() {
     const loginPayload = JSON.stringify({
         username: __ENV.API_USERNAME,
