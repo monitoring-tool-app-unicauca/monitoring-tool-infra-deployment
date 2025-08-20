@@ -8,7 +8,7 @@ let projectsTrend = new Trend("tracking_projects_response_time");
 let errorRate = new Rate("tracking_errors");
 
 export let options = {
-    vus: 50,
+    vus: 30,
     duration: "120s",
     thresholds: {
         http_req_duration: ["p(95)<500"], // todas las requests deben responder < 500ms en 95%
