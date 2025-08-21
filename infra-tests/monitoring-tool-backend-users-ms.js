@@ -7,8 +7,8 @@ let authTrend = new Trend("auth_response_time", true);
 let usersTrend = new Trend("users_response_time", true);
 
 export let options = {
-    vus: 20,
-    duration: "60s",
+    vus:30,
+    duration: "120s",
     thresholds: {
         http_req_duration: ["p(95)<500"],
         http_req_failed: ["rate<0.01"],
